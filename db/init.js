@@ -10,6 +10,6 @@ export async function initDatabase(){
         console.log("Database schema initilized");
 
     }catch(err){
-        console.error("Database Initilization faile:".err);
+        console.error("Database Initilization failed:".err);
     }
 }
