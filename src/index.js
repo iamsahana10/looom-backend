@@ -5,66 +5,68 @@ import { pool } from "./db.js";
 import { initDatabase } from "../db/init.js";
 import authRoutes from "./routes/auth.routes.js";
 import postRoutes from "./routes/posts.routes.js";
+import searchRoutes from "./routes/search.routes.js";
+import usersRoutes from "./routes/user.routes.js";
+import activityRoutes from "./routes/activity.routes.js";
 import likesFollowRoutes from "./routes/likes-follow.routes.js";
 import { errorHandler } from "./middleware/error.js";
-import searchRoutes from "./routes/search.routes.js";
-import userRoutes from "./routes/user.routes.js";
-import activityRoutes from "./routes/activity.routes.js";
 
-const allowedOrigins = ["http://localhost:5173"];
 const app = express();
-app.use(express.json());
+
+// Add your production frontend URL to this list!
+const allowedOrigins = ["http://localhost:5173", "http://localhost:3001"];
+
 app.use(
   cors({
     origin: function (origin, callback) {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by Cors"));
+        callback(new Error("Not allowed by CORS"));
       }
     },
   }),
 );
 
+app.use(express.json());
+
+// Basic health check
 app.get("/", (req, res) => {
-  res.json({ message: "API running" });
+  res.json({ message: "API running", env: process.env.NODE_ENV });
 });
 
-// auth routes
+// Routes
 app.use("/api/v1/auth", authRoutes);
-
-// posts routes
 app.use("/api/v1/posts", postRoutes);
-
-// Likes and follows routes
-
 app.use("/api/v1", likesFollowRoutes);
 app.use("/api/v1/search", searchRoutes);
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/users", usersRoutes);
 app.use("/api/v1/activity", activityRoutes);
 
-app.use(errorHandler); // must be last
+app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
+// --- VERCEL VS LOCAL LOGIC ---
 
-// STARTUP SEQUENCE
-async function startServer() {
-  try {
-    await pool.query("SELECT 1");
-    console.log("Database connection verified");
+if (process.env.NODE_ENV !== "production") {
+  // Only run this in local development
+  const PORT = process.env.PORT || 3000;
 
-    await initDatabase();
-    console.log("Database Initialized");
+  async function startLocalServer() {
+    try {
+      await pool.query("SELECT 1");
+      console.log("Database connection verified");
+      await initDatabase();
 
-    // app.listen(PORT, () => {
-    //   console.log(`Server running on port http://localhost:${PORT}`);
-    // });
-  } catch (err) {
-    console.error("Failed to connect to database");
-    console.error(err);
-    process.exit(1); // Stop app if DB fails
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    } catch (err) {
+      console.error("Failed to start local server:", err);
+    }
   }
+
+  startLocalServer();
 }
 
-startServer();
+// Export the app for Vercel's Serverless handler
 export default app;
