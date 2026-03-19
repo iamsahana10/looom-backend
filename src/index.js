@@ -56,9 +56,9 @@ async function startServer() {
     await initDatabase();
     console.log("Database Initialized");
 
-    app.listen(PORT, () => {
-      console.log(`Server running on port http://localhost:${PORT}`);
-    });
+    // app.listen(PORT, () => {
+    //   console.log(`Server running on port http://localhost:${PORT}`);
+    // });
   } catch (err) {
     console.error("Failed to connect to database");
     console.error(err);
@@ -67,3 +67,4 @@ async function startServer() {
 }
 
 startServer();
+export default app;
