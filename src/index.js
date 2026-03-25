@@ -19,6 +19,7 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
+console.log(allowedOrigins);
 const app = express();
 
 app.use(
